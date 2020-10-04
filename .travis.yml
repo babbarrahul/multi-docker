@@ -1,0 +1,25 @@
+sudo: required
+language: generic
+services:
+  - docker
+
+before_install:
+  - docker build - t babbar/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true babbar/react-test npm run test
+
+after_success:
+  - docker build -t babbar/multi-client ./client
+  - docker build -t babbar/multi-nginx ./nginx
+  - docker build -t babbar/multi-server ./server
+  - docker build -t babbar/multi-worker ./worker
+
+  #lOG IN to Docker Cli
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+
+  #Take those images and push them to docker hub
+  - docker push babbar/multi-client
+  - docker push babbar/multi-nginx
+  - docker push babbar/multi-server
+  - docker push babbar/multi-worker
